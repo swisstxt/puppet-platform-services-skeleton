@@ -1,3 +1,6 @@
+GIT_REPO='https://bitbucket.org/swisstxt/puppet-platform-services-skeleton.git'
+
+
 task :puppetmaster do
   puppet_includes =  [
     'platform_services',
@@ -11,5 +14,7 @@ task :puppetmaster do
 
   sh 'git submodule update --init --recursive'
   sh "echo \"include #{puppet_includes.join(', ')}\" | puppet apply #{puppet_manifest} --modulepath #{puppet_modules}"
+  sh "git clone #{GIT_REPO} /etc/puppet/environments/production"
+  sh "ln -s /etc/puppet/environments/production /etc/puppet/environments/development"
 
 end
