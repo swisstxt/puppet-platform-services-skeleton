@@ -49,8 +49,9 @@ namespace 'puppetmaster' do
 
   desc 'update the skeleton and it\'s submodules'
   task :update_skeleton do
-    sh 'cd /etc/puppet/environments/production'
-    sh 'git submodule update --init --recursive'
+    Dir.chdir('/etc/puppet/environments/production') do
+      sh 'git submodule update --init --recursive'
+    end
   end
 
 
