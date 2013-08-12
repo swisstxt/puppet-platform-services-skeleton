@@ -28,8 +28,8 @@ namespace 'puppetmaster' do
 
   desc 'deploy the swisstxt skeleton or a specified repository'
   task :deploy_skeleton do 
-    puppet_repo = ENV.has_key? 'puppet_repo' ? ENV['puppet_repo'] : 'https://bitbucket.org/swisstxt/puppet-platform-services-skeleton.git'
-    hiera_repo = ENV.has_key? 'hiera_repo' ? ENV['hiera_repo'] : 'https://bitbucket.org/swisstxt/platform-services-hiera-skeleton.git'
+    puppet_repo = ENV.has_key?('puppet_repo') ? ENV['puppet_repo'] : 'https://bitbucket.org/swisstxt/puppet-platform-services-skeleton.git'
+    hiera_repo = ENV.has_key?('hiera_repo') ? ENV['hiera_repo'] : 'https://bitbucket.org/swisstxt/platform-services-hiera-skeleton.git'
   
     sh "git clone #{puppet_repo} /etc/puppet/environments/production"
     sh "git clone #{hiera_repo} /etc/puppet/hieradata"
@@ -54,8 +54,8 @@ namespace 'puppetmaster' do
   task :configure do
     hiera_conf = '/etc/puppet/hieradata/global.yaml'
     global_conf = YAML.load_file(hiera_conf)
-    global_conf['cloudstack_api_key'] = ENV.has_key? 'api_key' ? ENV['api_key'] : 'XXX'
-    global_conf['cloudstack_secret_key'] = ENV.has_key? 'secret_key' ? ENV['secret_key'] : 'XXX'
+    global_conf['cloudstack_api_key'] = ENV.has_key?('api_key') ? ENV['api_key'] : 'XXX'
+    global_conf['cloudstack_secret_key'] = ENV.has_key?('secret_key') ? ENV['secret_key'] : 'XXX'
    
     File.open(hiera_conf, 'w+') do |f|
       f.write(global_conf.to_yaml)
