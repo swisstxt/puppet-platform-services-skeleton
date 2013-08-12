@@ -31,8 +31,8 @@ namespace 'puppetmaster' do
     puppet_repo = ENV.has_key?('puppet_repo') ? ENV['puppet_repo'] : 'https://bitbucket.org/swisstxt/puppet-platform-services-skeleton.git'
     hiera_repo = ENV.has_key?('hiera_repo') ? ENV['hiera_repo'] : 'https://bitbucket.org/swisstxt/platform-services-hiera-skeleton.git'
   
-    sh "git clone #{puppet_repo} /etc/puppet/environments/production"
-    sh "git clone #{hiera_repo} /etc/puppet/hieradata"
+    sh "test -e /etc/puppet/environments/production || git clone #{puppet_repo} /etc/puppet/environments/production"
+    sh "test -e /etc/puppet/hieradata || git clone #{hiera_repo} /etc/puppet/hieradata"
   end
 
   desc 'update the skeleton and it\'s submodules'
