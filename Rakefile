@@ -10,48 +10,29 @@ task :deploy, [:api_key, :secret_key, :puppet_repo, :hiera_repo] => [
 ] do |t, args|
 end
 
-
-
 namespace 'puppetmaster' do
-
   desc 'bootstrap a puppetmaster from the local clone'
-  task :bootstrap => [:update_platform_services, :apply] do
-  end
-
-  desc 'bootstrap a puppetmaster from the local clone via puppet apply'
-  task :apply do
-    puppet_includes =  [
-      'platform_services_puppet::master',
-    ]
-
-    puppet_manifest = './manifests/site.pp'
-    puppet_modules = './modules/swisstxt/'
-
-    sh "echo \"include #{puppet_includes.join(', ')}\" | puppet apply #{puppet_manifest} --modulepath #{puppet_modules}"
-  end
-
-  desc 'update platform_services to latest stable version'
-  task :update_platform_services do
+  task :bootstrap do
     sh 'git submodule update --init --recursive'
-    Dir.chdir('/etc/puppet/environments/production/modules/swisstxt') do
-      sh 'git checkout `git describe --abbrev=0 --tags`'
+    Dir.chdir('modules/swisstxt') do
+      if ENV.has_key? 'commit'
+        sh "git checkout #{ENV['commit']}"
+      else
+        sh 'git checkout `git describe --abbrev=0 --tags`'
+      end
       sh 'git submodule update --init'
     end
+
+    sh "echo include platform_services_puppet::master | puppet apply manifests/site.pp --modulepath modules/swisstxt/"
   end
 
   desc 'deploy the swisstxt skeleton or a specified repository'
-  task :deploy_skeleton, [:puppet_repo, :hiera_repo] do |t, args|
-    args.with_defaults(
-      :puppet_repo => 'https://bitbucket.org/swisstxt/puppet-platform-services-skeleton.git',
-      :hiera_repo  => 'https://bitbucket.org/swisstxt/platform-services-hiera-skeleton.git'  
-    )
-      
-    puppet_repo = args[:puppet_repo]
-    hiera_repo  = args[:hiera_repo]
+  task :deploy_skeleton do 
+    puppet_repo = ENV.has_key? 'puppet_repo' ? ENV['puppet_repo'] : 'https://bitbucket.org/swisstxt/puppet-platform-services-skeleton.git'
+    hiera_repo = ENV.has_key? 'hiera_repo' ? ENV['hiera_repo'] : 'https://bitbucket.org/swisstxt/platform-services-hiera-skeleton.git'
   
     sh "git clone #{puppet_repo} /etc/puppet/environments/production"
     sh "git clone #{hiera_repo} /etc/puppet/hieradata"
-    sh 'ln -s /etc/puppet/environments/production /etc/puppet/environments/development'
   end
 
   desc 'update the skeleton and it\'s submodules'
@@ -59,19 +40,22 @@ namespace 'puppetmaster' do
     Dir.chdir('/etc/puppet/environments/production') do
       sh 'git submodule update --init --recursive'
     end
+    Dir.chdir('/etc/puppet/environments/production/modules/swisstxt') do
+      if ENV.has_key? 'commit'
+        sh "git checkout #{ENV['commit']}"
+      else
+        sh 'git checkout `git describe --abbrev=0 --tags`'
+      end
+      sh 'git submodule update --init'
+    end
   end
 
   desc 'configure the skeleton in order for the puppetmaster to work'
-  task :configure, [:api_key, :secret_key] do |t, args|
-    args.with_defaults(:api_key => 'XXXXX', :secret_key => 'XXXXX')
-
+  task :configure do
     hiera_conf = '/etc/puppet/hieradata/global.yaml'
-
     global_conf = YAML.load_file(hiera_conf)
-    puts global_conf
-
-    global_conf['cloudstack_api_key']          = args.api_key
-    global_conf['cloudstack_secret_key']       = args.secret_key
+    global_conf['cloudstack_api_key'] = ENV.has_key? 'api_key' ? ENV['api_key'] : 'XXX'
+    global_conf['cloudstack_secret_key'] = ENV.has_key? 'secret_key' ? ENV['secret_key'] : 'XXX'
    
     File.open(hiera_conf, 'w+') do |f|
       f.write(global_conf.to_yaml)
@@ -82,6 +66,4 @@ namespace 'puppetmaster' do
   task :run do
     sh 'puppet agent --test'
   end
-
 end
-
