@@ -15,11 +15,3 @@ File{
 Exec{
   path => "/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin:/usr/local/sbin",
 }
-
-# run stages
-stage{'pre':
-  before => Stage['main'],
-}
-class{'yum':
-  stage => pre,
-}
