@@ -14,9 +14,12 @@ end
 
 namespace 'puppetmaster' do
 
-
   desc 'bootstrap a puppetmaster from the local clone'
-  task :bootstrap do
+  task :bootstrap => [:update_platform_services, :apply] do
+  end
+
+  desc 'bootstrap a puppetmaster from the local clone via puppet apply'
+  task :apply do
     puppet_includes =  [
       'platform_services_puppet::master',
     ]
@@ -24,11 +27,17 @@ namespace 'puppetmaster' do
     puppet_manifest = './manifests/site.pp'
     puppet_modules = './modules/swisstxt/'
 
-    sh 'git submodule update --init --recursive'
     sh "echo \"include #{puppet_includes.join(', ')}\" | puppet apply #{puppet_manifest} --modulepath #{puppet_modules}"
   end
 
-
+  desc 'update platform_services to latest stable version'
+  task :update_platform_services do
+    sh 'git submodule update --init --recursive'
+    Dir.chdir('/etc/puppet/environments/production/modules/swisstxt') do
+      sh 'git checkout `git describe --abbrev=0 --tags`'
+      sh 'git submodule update --init'
+    end
+  end
 
   desc 'deploy the swisstxt skeleton or a specified repository'
   task :deploy_skeleton, [:puppet_repo, :hiera_repo] do |t, args|
@@ -45,16 +54,12 @@ namespace 'puppetmaster' do
     sh 'ln -s /etc/puppet/environments/production /etc/puppet/environments/development'
   end
 
-
-
   desc 'update the skeleton and it\'s submodules'
   task :update_skeleton do
     Dir.chdir('/etc/puppet/environments/production') do
       sh 'git submodule update --init --recursive'
     end
   end
-
-
 
   desc 'configure the skeleton in order for the puppetmaster to work'
   task :configure, [:api_key, :secret_key] do |t, args|
@@ -73,10 +78,8 @@ namespace 'puppetmaster' do
     end
   end
 
-
   desc 'perform a full puppet run'
   task :run do
-
     sh 'puppet agent --test'
   end
 
