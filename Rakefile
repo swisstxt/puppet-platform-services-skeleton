@@ -5,7 +5,6 @@ task :deploy, [:api_key, :secret_key, :puppet_repo, :hiera_repo] => [
   'puppetmaster:bootstrap',
   'puppetmaster:deploy_skeleton',
   'puppetmaster:update_skeleton',
-  'puppetmaster:configure',
 ] do |t, args|
 end
 
@@ -46,18 +45,6 @@ namespace 'puppetmaster' do
         sh 'git checkout `git describe --abbrev=0 --tags`'
       end
       sh 'git submodule update --init'
-    end
-  end
-
-  desc 'configure the skeleton in order for the puppetmaster to work'
-  task :configure do
-    hiera_conf = '/etc/puppet/hieradata/global.yaml'
-    global_conf = YAML.load_file(hiera_conf)
-    global_conf['cloudstack_api_key'] = ENV.has_key?('api_key') ? ENV['api_key'] : 'XXX'
-    global_conf['cloudstack_secret_key'] = ENV.has_key?('secret_key') ? ENV['secret_key'] : 'XXX'
-
-    File.open(hiera_conf, 'w+') do |f|
-      f.write(global_conf.to_yaml)
     end
     print "Now it is time to configure hiera before running 'rake puppetmaster:run'\n"
   end
