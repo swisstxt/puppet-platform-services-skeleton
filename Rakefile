@@ -13,20 +13,14 @@ namespace 'puppetmaster' do
   task :bootstrap do
     sh 'git submodule update --init --recursive'
     Dir.chdir('modules/swisstxt') do
-      if ENV.has_key? 'commit'
-        sh "git checkout #{ENV['commit']}"
-      else
-        sh 'git checkout `git describe --abbrev=0 --tags`'
-      end
       sh 'git submodule update --init'
     end
-
     sh "echo include platform_services_puppet::master | puppet apply manifests/site.pp --modulepath modules/swisstxt/"
   end
 
   desc 'deploy the swisstxt skeleton or a specified repository'
   task :deploy_skeleton do 
-    puppet_repo = ENV.has_key?('puppet_repo') ? ENV['puppet_repo'] : 'https://bitbucket.org/swisstxt/puppet-platform-services-skeleton.git'
+    puppet_repo = ENV.has_key?('puppet_repo') ? ENV['puppet_repo'] : '-b $(git rev-parse --abbrev-ref HEAD) https://bitbucket.org/swisstxt/puppet-platform-services-skeleton.git'
     hiera_repo = ENV.has_key?('hiera_repo') ? ENV['hiera_repo'] : 'https://bitbucket.org/swisstxt/platform-services-hiera-skeleton.git'
   
     sh "test -e /etc/puppet/environments/production || git clone #{puppet_repo} /etc/puppet/environments/production"
@@ -39,12 +33,7 @@ namespace 'puppetmaster' do
       sh 'git submodule update --init --recursive'
     end
     Dir.chdir('/etc/puppet/environments/production/modules/swisstxt') do
-      if ENV.has_key? 'commit'
-        sh "git checkout #{ENV['commit']}"
-      else
-        sh 'git checkout `git describe --abbrev=0 --tags`'
-      end
-      sh 'git submodule update --init'
+     sh 'git submodule update --init'
     end
     print "Now it is time to configure hiera before running 'rake puppetmaster:run'\n"
   end
