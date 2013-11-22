@@ -35,10 +35,10 @@ namespace 'puppetmaster' do
   desc 'deploy the platform-services and hieradata skeletons'
   task :deploy_skeletons do
     unless File.exists? LOCAL_SKELETON
-      sh "git clone #{SKELETON_REPO} #{LOCAL_SKELETON}"
+      sh "git clone #{REMOTE_SKELETON} #{LOCAL_SKELETON}"
     end
     unless File.exists? LOCAL_HIERA_SKELETON
-      sh "git clone #{HIERA_SKELETON_REPO} #{LOCAL_HIERA_SKELETON}"
+      sh "git clone #{REMOTE_HIERA_SKELETON} #{LOCAL_HIERA_SKELETON}"
     end
   end
 
