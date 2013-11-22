@@ -15,6 +15,7 @@ desc 'initial deployment ot the puppetmaster from local clone'
 task :deploy => [
   'puppetmaster:bootstrap',
   'puppetmaster:deploy_skeletons',
+  'puppetmaster:upgrade',
 ] do |t, args|
 end
 
