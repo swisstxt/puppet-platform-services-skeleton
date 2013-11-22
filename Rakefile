@@ -1,41 +1,56 @@
 require 'yaml'
 
+REMOTE_PLATFORM_SERVICES = 'https://bitbucket.org/swisstxt/puppet-platform-services.git'
+REMOTE_SKELETON = 'https://bitbucket.org/swisstxt/puppet-platform-services-skeleton.git'
+REMOTE_HIERA_SKELETON = 'https://bitbucket.org/swisstxt/puppet-platform-services-hiera-skeleton.git'
+
+LOCAL_SKELETON = '/etc/puppet/environments/production'
+LOCAL_HIERA_SKELETON = '/etc/puppet/hieradata'
+
+unless ENV.has_key?('commit')
+  ENV['commit'] = `git ls-remote --tags #{REMOTE_PLATFORM_SERVICES} | grep 'tags/v' | cut -f 2 | sort -rV | head -1`
+end
+
 desc 'initial deployment ot the puppetmaster from local clone'
-task :deploy, [:api_key, :secret_key, :puppet_repo, :hiera_repo] => [
+task :deploy => [
   'puppetmaster:bootstrap',
-  'puppetmaster:deploy_skeleton',
-  'puppetmaster:update_skeleton',
+  'puppetmaster:deploy_skeletons',
 ] do |t, args|
 end
 
 namespace 'puppetmaster' do
   desc 'bootstrap a puppetmaster from the local clone'
   task :bootstrap do
-    sh 'git submodule update --init --recursive'
-    Dir.chdir('modules/swisstxt') do
+    sh 'git submodule update --init'
+    Dir.chdir 'modules/swisstxt' do
+      sh "git checkout #{ENV['commit']}"
+      sh 'git reset --hard'
+      sh 'git clean -f -d'
+      sh 'git submodule sync'
       sh 'git submodule update --init'
     end
-    sh "echo include platform_services_puppet::master | puppet apply manifests/site.pp --modulepath modules/swisstxt/"
+    sh 'echo include platform_services_puppet::master | puppet apply manifests/site.pp --modulepath modules/swisstxt'
   end
 
-  desc 'deploy the swisstxt skeleton or a specified repository'
-  task :deploy_skeleton do 
-    puppet_repo = ENV.has_key?('puppet_repo') ? ENV['puppet_repo'] : '-b $(git rev-parse --abbrev-ref HEAD) https://bitbucket.org/swisstxt/puppet-platform-services-skeleton.git'
-    hiera_repo = ENV.has_key?('hiera_repo') ? ENV['hiera_repo'] : 'https://bitbucket.org/swisstxt/platform-services-hiera-skeleton.git'
-  
-    sh "test -e /etc/puppet/environments/production || git clone #{puppet_repo} /etc/puppet/environments/production"
-    sh "test -e /etc/puppet/hieradata || git clone #{hiera_repo} /etc/puppet/hieradata"
+  desc 'deploy the platform-services and hieradata skeletons'
+  task :deploy_skeletons do
+    unless File.exists? LOCAL_SKELETON
+      sh "git clone #{SKELETON_REPO} #{LOCAL_SKELETON}"
+    end
+    unless File.exists? LOCAL_HIERA_SKELETON
+      sh "git clone #{HIERA_SKELETON_REPO} #{LOCAL_HIERA_SKELETON}"
+    end
   end
 
-  desc 'update the skeleton and it\'s submodules'
-  task :update_skeleton do
-    Dir.chdir('/etc/puppet/environments/production') do
-      sh 'git submodule update --init --recursive'
+  desc 'update platform-services'
+  task :upgrade do
+    Dir.chdir File.join(LOCAL_SKELETON, 'modules/swisstxt') do
+      sh "git checkout #{ENV['commit']}"
+      sh 'git reset --hard'
+      sh 'git clean -f -d'
+      sh 'git submodule sync'
+      sh 'git submodule update --init'
     end
-    Dir.chdir('/etc/puppet/environments/production/modules/swisstxt') do
-     sh 'git submodule update --init'
-    end
-    print "Now it is time to configure hiera before running 'rake puppetmaster:run'\n"
   end
 
   desc 'perform a full puppet run'
