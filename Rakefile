@@ -45,6 +45,9 @@ namespace 'puppetmaster' do
 
   desc 'update platform-services'
   task :upgrade do
+    Dir.chdir LOCAL_SKELETON do
+      sh 'git submodule update --init'
+    end
     Dir.chdir File.join(LOCAL_SKELETON, 'modules/swisstxt') do
       sh "git checkout #{ENV['commit']}"
       sh 'git reset --hard'
