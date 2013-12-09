@@ -1,4 +1,4 @@
-class profile::haprox::service::dummy {
+class profile::haproxy::service::dummy {
   platform_services_haproxy::service{'dummy-www':
     ipaddress       => '127.0.0.1',
     ports           => [80, 443],
