@@ -1,8 +1,8 @@
 require 'yaml'
 
-REMOTE_PLATFORM_SERVICES = 'https://bitbucket.org/swisstxt/puppet-platform-services.git'
-REMOTE_SKELETON = 'https://bitbucket.org/swisstxt/puppet-platform-services-skeleton.git'
-REMOTE_HIERA_SKELETON = 'https://bitbucket.org/swisstxt/puppet-platform-services-hiera-skeleton.git'
+REMOTE_PLATFORM_SERVICES = 'https://github.com/swisstxt/puppet-platform-services.git'
+REMOTE_SKELETON = 'https://github.com/swisstxt/puppet-platform-services-skeleton.git'
+REMOTE_HIERA_SKELETON = 'https://github.com/swisstxt/puppet-platform-services-hiera-skeleton.git'
 
 LOCAL_SKELETON = '/etc/puppet/environments/production'
 LOCAL_HIERA_SKELETON = '/etc/puppet/hieradata'
