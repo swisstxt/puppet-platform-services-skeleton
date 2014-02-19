@@ -20,3 +20,8 @@ node /cache-\d+\..*/ {
   #include role::cache
   include base
 }
+
+node /^web-.*\./ {
+  include base
+  include ::role::sochi_api
+}
