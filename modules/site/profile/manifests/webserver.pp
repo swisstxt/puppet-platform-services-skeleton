@@ -1,6 +1,7 @@
 class profile::webserver {
   include ::apache
- 
+  include ::platform_services_firewall::http
+
   file { '/srv/sochi_api':
     ensure => 'directory',
   } ->
